@@ -1,19 +1,35 @@
----
-title: "Reproducible Research Assignment 1"
-author: "Darragh McLernon"
-date: "17 January 2016"
-output: 
-  html_document: 
-    keep_md: yes
----
+# Reproducible Research Assignment 1
+Darragh McLernon  
+17 January 2016  
 
 #Loading and preprocessing the data
 The data is loaded from the working directory and read as a CSV file.
-```{r, results='hide'}
+
+```r
 #Setting the working directory
 setwd("~/Documents/coursera/reproducible_research/")
 
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(ggplot2)
 
 #Loading and preprocessing the data
@@ -26,48 +42,77 @@ activity_data <- read.csv("./activity.csv")
 ##Make a histogram of the total number of steps taken each day
 
 Firstly, I generated the total number of steps each day using the aggregate() function
-```{r, results='hide'}
+
+```r
 daily_steps_data <- aggregate(steps ~ date,data=activity_data,sum)
 ```
 
 I plotted the histogram using the daily_steps_data just calculated
-```{r}
+
+```r
 qplot(daily_steps_data$steps, xlab = "Number of steps", ylab = "Frequency")
 ```
 
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](reproducible_research_assignment_1_files/figure-html/unnamed-chunk-3-1.png)\
+
 ##Calculate and report the mean and median of the total number of steps taken per day
 Using the summary function I quickly found the mean and median number of steps taken. I also got other useful statistics about the data such as Min and Max and quartile values.
-```{r}
+
+```r
 summary(daily_steps_data$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    8841   10760   10770   13290   21190
 ```
 
 #What is the average daily activity pattern?
 
 ##Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 To generate a plot of steps averaged over the daily intervals I first aggregated the data.
-```{r, results='hide'}
+
+```r
 #Calculate the interval means
 interval_mean <- aggregate(steps ~ interval, data=activity_data, mean)
 ```
 
 With the aggregated data I plotted the graph using the ggplot function
-```{r}
+
+```r
 #Plot the graph
 ggplot(data=interval_mean,aes(x=interval, y=steps, group=1)) +
     geom_line()
 ```
 
+![](reproducible_research_assignment_1_files/figure-html/unnamed-chunk-6-1.png)\
+
 ##Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 To find the max I called the which.max function across the steps column
-```{r}
+
+```r
 interval_mean[which.max(interval_mean$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 #Imputing missing values
 ##Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 Here I used the sum function on NA values to find the total number of missing values
-```{r}
+
+```r
 sum(is.na(activity_data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 ##Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. 
@@ -80,7 +125,8 @@ I cloned the data frame so the original is left unchanged. I then followed these
 - Got the list of mean values for all of the observations
 - Rounded the mean values to whole numbers
 - Replaced the missing values with the means where the boolean list was TRUE
-```{r, results='hide'}
+
+```r
 #Re-create the original data
 fixed_activity_data <- activity_data
 
@@ -102,19 +148,33 @@ I decided to round the steps to full numbers to keep consistent with the rest of
 
 ##Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.
 
-```{r, results='hide'}
+
+```r
 #Calculate the total steps per day
 fixed_daily_steps_data <- aggregate(steps ~ date,data=fixed_activity_data,sum)
 ```
 
-```{r}
+
+```r
 #Plot the graph
 qplot(fixed_daily_steps_data$steps, xlab = "Number of steps", ylab = "Frequency")
 ```
 
-```{r}
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](reproducible_research_assignment_1_files/figure-html/unnamed-chunk-11-1.png)\
+
+
+```r
 #Calculating the median and mean
 summary(fixed_daily_steps_data$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10760   10770   12810   21190
 ```
 
 The new median and mean values do not appear to have changed from the data set where the NA values were present. Although the first and third quartiles have. I would consider this an indication that the method used to fill in NA values hasn't inappropriately skewed the data. If I hadn't rounded the steps the results would no doubt have been different. Further analysis would be required to determine if rounding the data produced more accurate results or not.
@@ -126,7 +186,8 @@ Here I decided to create a new column to the data with a type of boolean. TRUE w
 - I got a list of the days from the data frame in plain text using the weekdays() function
 - I checked the list against the values "Saturday" and "Sunday" which produced the boolean list
 - The boolean list was then appended to the data frame with the column heading "weekend"
-```{r, results='hide'}
+
+```r
 #Get the list of days
 list_of_days <-  weekdays(as.Date(fixed_activity_data$date, format = "%Y-%m-%d"))
 
@@ -135,7 +196,8 @@ fixed_activity_data[,"weekend"] <- list_of_days == "Saturday" | list_of_days =="
 ```
 
 To produce the graph I had to group the data by 'interval' and 'weekend'. After grouping, I summarised the values by a mean value for steps taken for each group.
-```{r, results='hide'}
+
+```r
 #Add the groupings for the interval and the weekend and save to new data set
 weekday_mean_data <- group_by(fixed_activity_data, interval, weekend)
 
@@ -144,11 +206,14 @@ weekday_mean_data <- summarise(weekday_mean_data, steps = round(mean(steps)))
 ```
 
 The plot was created using ggplot
-```{r}
+
+```r
 ggplot(weekday_mean_data, aes(x=interval, y=steps, color = weekend)) +
     geom_line() +
     facet_wrap(~weekend, ncol = 1, nrow=2, labeller = "label_both")
 ```
+
+![](reproducible_research_assignment_1_files/figure-html/unnamed-chunk-15-1.png)\
 
 The two plots show distinct patterns. The weekend:FALSE (weekdays) plot shows very little activity until around 6am where there is then a spike in the number of steps taken to around 40-60 per 5-minute intervals. This continues until around 07:30-8:00am where there is another sharp spike to over 200 steps per 5-minute interval. This spike drops dramatically over the next hour. For the rest of the day the number of steps remains below 120. However we do see three more distinct spikes in number of steps at around 1pm, 3:30-4pm and 6pm.
 
